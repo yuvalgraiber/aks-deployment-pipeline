@@ -1,0 +1,23 @@
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: {{ include "simple-web.fullname" . }}-keda
+  namespace: yuvalgr
+spec:
+  scaleTargetRef:
+    name: {{ include "simple-web.fullname" . }}
+  minReplicaCount: 1
+  maxReplicaCount: 10
+  triggers:
+    - type: cpu
+      metadata:
+        value: "50"
+    - type: memory
+      metadata:
+        value: "100"
+    - type: cron
+      metadata:
+        timezone: Asia/Jerusalem
+        start: 00 08 * * *
+        end: 00 00 * * *
+        desiredReplicas: "3"

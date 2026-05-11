@@ -1,0 +1,21 @@
+replicaCount: 1
+
+image:
+  repository: acrinterview.azurecr.io/simple-web
+  pullPolicy: IfNotPresent
+  tag: "latest"
+
+service:
+  type: ClusterIP
+  port: 80
+
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+  hosts:
+    - host: ""
+      paths:
+        - path: /yuvalgr
+          pathType: Prefix
