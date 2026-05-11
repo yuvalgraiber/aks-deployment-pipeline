@@ -34,15 +34,18 @@ pipeline {
             }
         }
 
-        stage('Deploy to AKS') {
+       stage('Deploy to AKS') {
             steps {
-                // Deploy or upgrade the release in the cluster
-                sh """
-                    helm upgrade --install my-release ${CHART_PATH} \
-                    --namespace ${NAMESPACE} \
-                    --create-namespace
-                """
+                // We explicitly tell Helm where the config file is
+                withEnv(["KUBECONFIG=/var/lib/jenkins/.kube/config"]) {
+                    sh """
+                        helm upgrade --install my-release ${CHART_PATH} \
+                        --namespace ${NAMESPACE} \
+                        --create-namespace
+                    """
+                }
             }
+        }
         }
     }
 
