@@ -87,7 +87,6 @@ pipeline {
 
                     helm upgrade --install simple-web ${env.CHART_PATH} \
                         --namespace ${env.NAMESPACE} \
-                        --create-namespace \
                         -f ${env.CHART_PATH}/values.yaml \
                         --wait \
                         --timeout 5m
