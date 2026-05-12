@@ -17,7 +17,7 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/config: {{ include "simple-web.configmap" . | sha256sum }}
+        checksum/config: {{ toJson .Values.pythonApp | sha256sum }}
       labels:
         {{- include "simple-web.selectorLabels" . | nindent 8 }}
     spec:
