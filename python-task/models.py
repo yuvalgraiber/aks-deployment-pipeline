@@ -2,7 +2,6 @@ from pydantic import BaseModel, Field, ConfigDict
 from typing import List, Optional
 
 class BookModel(BaseModel):
-    # Pydantic v2 configuration
     model_config = ConfigDict(populate_by_name=True)
 
     title: str

@@ -28,6 +28,6 @@ charts/
 .env
 *.pem
 *.key
-# קבצי Kubeconfig מקומיים בטעות
+
 config
 kubeconfig
