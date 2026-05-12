@@ -1,9 +1,33 @@
-# Python
+# --- Python Specific ---
 __pycache__/
+*.py[cod]
+*$py.class
 .venv/
 venv/
-*.pyc
+ENV/
+build/
+dist/
+*.egg-info/
+filtered_books.json
 
-# Kubernetes/Helm
+# --- Kubernetes & Helm ---
 .kube/
 charts/
+*.tgz
+.helm/
+
+# --- IDE & OS ---
+.vscode/
+.idea/
+.DS_Store
+*.swp
+*.bak
+*.tmp
+
+# --- Environment & Secrets ---
+.env
+*.pem
+*.key
+# קבצי Kubeconfig מקומיים בטעות
+config
+kubeconfig

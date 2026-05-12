@@ -11,13 +11,14 @@ spec:
   triggers:
     - type: cpu
       metadata:
-        value: "50" # Scale when CPU exceeds 50%
+        value: "50"
     - type: memory
+      metricType: Utilization
       metadata:
-        value: "100Mi" # Scale when Memory exceeds 100Mi
+        value: "70"
     - type: cron
       metadata:
         timezone: Asia/Jerusalem
         start: 00 08 * * *
-        end: 59 23 * * *    
+        end: 00 00 * * * # Midnight sharp
         desiredReplicas: "3"

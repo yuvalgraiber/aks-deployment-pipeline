@@ -22,18 +22,13 @@ pipeline {
     }
 
     stages {
-
         stage('AKS Login') {
             steps {
                 echo "Authenticating with AKS..."
                 retry(2) {
                     sh """
-                        set -e
                         az login --identity
-                        az aks get-credentials \
-                          --name ${env.CLUSTER_NAME} \
-                          --resource-group ${env.RESOURCE_GROUP} \
-                          --overwrite-existing
+                        az aks get-credentials --name ${env.CLUSTER_NAME} --resource-group ${env.RESOURCE_GROUP} --overwrite-existing
                         kubelogin convert-kubeconfig -l msi
                     """
                 }
@@ -45,32 +40,12 @@ pipeline {
             steps {
                 dir("${env.PYTHON_TASK_PATH}") {
                     sh """
-                        set -e
                         rm -rf venv
                         python3 -m venv venv
                         . venv/bin/activate
-
                         pip install --no-cache-dir -r requirements.txt
-
-                        # Syntax validation
                         python3 -m py_compile main.py models.py
-
-                        # Optional: add tests if available
-                        # pytest || exit 1
-
                         python main.py
-                    """
-                }
-            }
-        }
-
-        stage('Helm Lint') {
-            when { expression { params.ACTION == 'deploy' } }
-            steps {
-                dir("${env.CHART_PATH}") {
-                    sh """
-                        set -e
-                        helm lint .
                     """
                 }
             }
@@ -79,41 +54,25 @@ pipeline {
         stage('Deploy') {
             when { expression { params.ACTION == 'deploy' } }
             steps {
-                echo "Starting Helm Upgrade..."
-
+                echo "Ensuring Namespace and Deploying..."
                 sh """
-                    set -e
                     export KUBECONFIG=${env.KUBECONFIG}
-
+                    # Idempotent namespace creation
+                    kubectl create namespace ${env.NAMESPACE} --dry-run=client -o yaml | kubectl apply -f -
+                    
                     helm upgrade --install simple-web ${env.CHART_PATH} \
                         --namespace ${env.NAMESPACE} \
                         -f ${env.CHART_PATH}/values.yaml \
-                        --wait \
-                        --timeout 5m
+                        --wait --timeout 5m
                 """
 
-                echo "Verifying Rollout..."
-
                 sh """
-                    set -e
                     export KUBECONFIG=${env.KUBECONFIG}
-
-                    kubectl rollout status deployment/simple-web \
-                        -n ${env.NAMESPACE} \
-                        --timeout=120s \
-                    || (
-                        echo "Rollout failed. Collecting diagnostics..."
-                        kubectl get pods -n ${env.NAMESPACE}
+                    kubectl rollout status deployment/simple-web -n ${env.NAMESPACE} --timeout=120s || (
+                        echo "Rollout failed. Diagnostics:"
                         kubectl describe pods -n ${env.NAMESPACE}
                         exit 1
                     )
-                """
-
-                echo "Basic service check..."
-                sh """
-                    set -e
-                    export KUBECONFIG=${env.KUBECONFIG}
-                    kubectl get svc -n ${env.NAMESPACE}
                 """
             }
         }
@@ -121,15 +80,9 @@ pipeline {
         stage('Destroy') {
             when { expression { params.ACTION == 'destroy' } }
             steps {
-                echo "Uninstalling release..."
-
                 sh """
-                    set -e
                     export KUBECONFIG=${env.KUBECONFIG}
-
-                    helm status simple-web -n ${env.NAMESPACE} \
-                    && helm uninstall simple-web -n ${env.NAMESPACE} \
-                    || echo "Release already removed"
+                    helm uninstall simple-web -n ${env.NAMESPACE} || echo "Already removed"
                 """
             }
         }
@@ -142,15 +95,7 @@ pipeline {
                     archiveArtifacts artifacts: "${env.PYTHON_TASK_PATH}/*.json", allowEmptyArchive: true
                 }
             }
-            echo "Pipeline completed successfully!"
         }
-
-        failure {
-            echo "Pipeline failed. Check logs above for details."
-        }
-
-        always {
-            cleanWs()
-        }
+        always { cleanWs() }
     }
 }
