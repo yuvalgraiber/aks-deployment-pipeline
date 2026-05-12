@@ -27,6 +27,7 @@ pipeline {
                 echo "Authenticating with AKS..."
                 retry(2) {
                     sh """
+                        set -e
                         az login --identity
                         az aks get-credentials --name ${env.CLUSTER_NAME} --resource-group ${env.RESOURCE_GROUP} --overwrite-existing
                         kubelogin convert-kubeconfig -l msi
@@ -40,6 +41,7 @@ pipeline {
             steps {
                 dir("${env.PYTHON_TASK_PATH}") {
                     sh """
+                        set -e
                         rm -rf venv
                         python3 -m venv venv
                         . venv/bin/activate
@@ -51,13 +53,26 @@ pipeline {
             }
         }
 
+        stage('Helm Lint') {
+            when { expression { params.ACTION == 'deploy' } }
+            steps {
+                dir("${env.CHART_PATH}") {
+                    sh """
+                        set -e
+                        helm dependency update
+                        helm lint .
+                    """
+                }
+            }
+        }
+
         stage('Deploy') {
             when { expression { params.ACTION == 'deploy' } }
             steps {
                 echo "Ensuring Namespace and Deploying..."
                 sh """
+                    set -e
                     export KUBECONFIG=${env.KUBECONFIG}
-                    # Idempotent namespace creation
                     kubectl create namespace ${env.NAMESPACE} --dry-run=client -o yaml | kubectl apply -f -
                     
                     helm upgrade --install simple-web ${env.CHART_PATH} \
@@ -67,6 +82,7 @@ pipeline {
                 """
 
                 sh """
+                    set -e
                     export KUBECONFIG=${env.KUBECONFIG}
                     kubectl rollout status deployment/simple-web -n ${env.NAMESPACE} --timeout=120s || (
                         echo "Rollout failed. Diagnostics:"
@@ -81,6 +97,7 @@ pipeline {
             when { expression { params.ACTION == 'destroy' } }
             steps {
                 sh """
+                    set -e
                     export KUBECONFIG=${env.KUBECONFIG}
                     helm uninstall simple-web -n ${env.NAMESPACE} || echo "Already removed"
                 """
