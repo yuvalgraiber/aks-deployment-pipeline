@@ -21,7 +21,7 @@ pipeline {
     stages {
         stage('Python Setup & Execute') {
             steps {
-                dir("${PYTHON_TASK_PATH}") {
+                dir("${env.PYTHON_TASK_PATH}") {
                     sh """
                         python3 -m venv venv
                         . venv/bin/activate
@@ -35,13 +35,13 @@ pipeline {
 
         stage('Helm Lint') {
             steps {
-                dir("${CHART_PATH}") {
+                dir("${env.CHART_PATH}") {
                     sh "helm lint ."
                 }
             }
         }
 
-       stage('Deploy / Destroy') {
+        stage('Deploy / Destroy') {
             steps {
                 script {
                     if (params.ACTION == 'deploy') {
@@ -55,6 +55,7 @@ pipeline {
                             helm uninstall my-release --namespace ${env.NAMESPACE}
                         """
                     }
+                }
             }
         }
     }
