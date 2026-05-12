@@ -18,7 +18,7 @@ def fetch_and_process_books(query: str):
     headers = {"User-Agent": "DevOpsTask-BookFetcher/1.0"}
     
     # Added timeout for production reliability
-    response = requests.get(url, params=params, headers=headers, timeout=10)
+    response = requests.get(url, params=params, headers=headers, timeout=25)
     response.raise_for_status()
     data = response.json()
     
