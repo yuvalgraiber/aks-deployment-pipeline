@@ -1,8 +1,20 @@
 import requests
 import json
 import sys
+import os
 from models import BookModel
 from typing import List
+
+# Safe parsing with fallback
+try:
+    TIMEOUT_VAL = int(os.getenv("HTTP_TIMEOUT", "30"))
+except ValueError:
+    TIMEOUT_VAL = 30
+
+SEARCH_QUERY = os.getenv("SEARCH_QUERY", "The Lord of the Rings")
+API_URL = os.getenv("API_URL", "https://openlibrary.org/search.json")
+FILTER_KEYWORD = os.getenv("FILTER_KEYWORD", "lord")
+
 
 class OutputHandler:
     @staticmethod
@@ -12,34 +24,37 @@ class OutputHandler:
             json.dump(json_data, f, indent=4)
         print(f"Data successfully saved to {filename}")
 
+
 def fetch_and_process_books(query: str):
-    url = "https://openlibrary.org/search.json"
     params = {"q": query}
     headers = {"User-Agent": "DevOpsTask-BookFetcher/1.0"}
-    
-    # Added timeout for production reliability
-    response = requests.get(url, params=params, headers=headers, timeout=25)
+
+    response = requests.get(
+        API_URL,
+        params=params,
+        headers=headers,
+        timeout=TIMEOUT_VAL
+    )
     response.raise_for_status()
     data = response.json()
-    
+
     all_books = [BookModel(**doc) for doc in data.get("docs", [])]
-    
+
     filtered_books = [
-        book for book in all_books 
-        if (book.publish_year and book.publish_year > 1950) and 
-           ("lord" in book.title.lower())
+        book for book in all_books
+        if (book.publish_year and book.publish_year > 1950) and
+           (FILTER_KEYWORD in book.title.lower())
     ]
-    
+
     return filtered_books[:5]
 
+
 if __name__ == "__main__":
-    search_query = "The Lord of the Rings"
-    
     try:
-        results = fetch_and_process_books(search_query)
+        results = fetch_and_process_books(SEARCH_QUERY)
         OutputHandler.save_to_json(results, "filtered_books.json")
     except requests.exceptions.Timeout:
-        print("Error: The request timed out.")
+        print(f"Error: The request timed out after {TIMEOUT_VAL} seconds.")
         sys.exit(1)
     except requests.exceptions.RequestException as e:
         print(f"Network error: {e}")

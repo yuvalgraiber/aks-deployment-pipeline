@@ -38,3 +38,9 @@ probes:
     path: /
     initialDelaySeconds: 5
     periodSeconds: 10
+
+pythonApp:
+  timeout: 25
+  searchQuery: "The Lord of the Rings"
+  apiUrl: "https://openlibrary.org/search.json"
+  filterKeyword: "lord"

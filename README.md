@@ -72,8 +72,7 @@ A declarative pipeline implementing a full CI/CD lifecycle with strong focus on 
 
 **Autoscaling with KEDA**
 
-* CPU trigger (>50%)
-* Memory trigger (>100Mi)
+* CPU & Memory trigger Memory trigger based on utilization
 * Cron-based scaling:
 
   * 3 replicas between 08:00–00:00 (Asia/Jerusalem)
