@@ -6,6 +6,12 @@ metadata:
     {{- include "simple-web.labels" . | nindent 4 }}
 spec:
   replicas: {{ .Values.replicaCount }}
+  # RollingUpdate strategy ensures zero-downtime
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
   selector:
     matchLabels:
       {{- include "simple-web.selectorLabels" . | nindent 6 }}

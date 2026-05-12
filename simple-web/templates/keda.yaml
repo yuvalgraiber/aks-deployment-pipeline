@@ -14,10 +14,10 @@ spec:
         value: "50" # Scale when CPU exceeds 50%
     - type: memory
       metadata:
-        value: "100" # Scale when Memory exceeds 100Mi
+        value: "100Mi" # Scale when Memory exceeds 100Mi
     - type: cron
       metadata:
         timezone: Asia/Jerusalem
-        start: 00 08 * * * # 8:00 AM
-        end: 59 23 * * * # 11:59 PM (covers the 8AM-12AM requirement)
+        start: 00 08 * * *
+        end: 59 23 * * *    
         desiredReplicas: "3"

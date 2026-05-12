@@ -29,7 +29,6 @@ resources:
     cpu: 100m
     memory: 128Mi
 
-# התיקון הקריטי כאן: שינוי הנתיב מ-/yuvalgr ל-/
 probes:
   liveness:
     path: /
