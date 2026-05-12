@@ -2,7 +2,7 @@ apiVersion: keda.sh/v1alpha1
 kind: ScaledObject
 metadata:
   name: {{ include "simple-web.fullname" . }}-keda
-  namespace: yuvalgr
+  namespace: {{ .Release.Namespace }}
 spec:
   scaleTargetRef:
     name: {{ include "simple-web.fullname" . }}
@@ -11,13 +11,13 @@ spec:
   triggers:
     - type: cpu
       metadata:
-        value: "50"
+        value: "50" # Scale when CPU exceeds 50%
     - type: memory
       metadata:
-        value: "100"
+        value: "100" # Scale when Memory exceeds 100Mi
     - type: cron
       metadata:
         timezone: Asia/Jerusalem
-        start: 00 08 * * *
-        end: 00 00 * * *
+        start: 00 08 * * * # 8:00 AM
+        end: 59 23 * * * # 11:59 PM (covers the 8AM-12AM requirement)
         desiredReplicas: "3"

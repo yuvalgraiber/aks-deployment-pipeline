@@ -1,11 +1,21 @@
 pipeline {
     agent any
 
+    options {
+        disableConcurrentBuilds()
+        buildDiscarder(logRotator(numToKeepStr: '10'))
+        timeout(time: 10, unit: 'MINUTES')
+    }
+
+    parameters {
+        choice(name: 'ACTION', choices: ['deploy', 'destroy'], description: 'Choose whether to deploy or destroy the environment')
+    }
+
     environment {
-        // Define the namespace to be used across the pipeline
         NAMESPACE = 'yuvalgr'
         CHART_PATH = './simple-web'
         PYTHON_TASK_PATH = './python-task'
+        KUBECONFIG = '/var/lib/jenkins/.kube/config'
     }
 
     stages {
@@ -13,12 +23,10 @@ pipeline {
             steps {
                 dir("${PYTHON_TASK_PATH}") {
                     sh """
-                        # Create a temporary virtualenv for the CI run
                         python3 -m venv venv
                         . venv/bin/activate
-                        # Install dependencies from requirements.txt
                         pip install -r requirements.txt
-                        # Run the book fetcher script
+                        python3 -m py_compile main.py models.py
                         python main.py
                     """
                 }
@@ -28,24 +36,27 @@ pipeline {
         stage('Helm Lint') {
             steps {
                 dir("${CHART_PATH}") {
-                    // Verify the Helm chart syntax
                     sh "helm lint ."
                 }
             }
         }
 
-       stage('Deploy to AKS') {
+        stage('Deploy / Destroy') {
             steps {
-                // We explicitly tell Helm where the config file is
-                withEnv(["KUBECONFIG=/var/lib/jenkins/.kube/config"]) {
-                    sh """
-                        helm upgrade --install my-release ${CHART_PATH} \
-                        --namespace ${NAMESPACE} \
-                        --create-namespace
-                    """
+                script {
+                    if (params.ACTION == 'deploy') {
+                        sh """
+                            export KUBECONFIG=${KUBECONFIG}
+                            helm upgrade --install my-release ${CHART_PATH} --namespace ${NAMESPACE} --create-namespace --wait
+                        """
+                    } else {
+                        sh """
+                            export KUBECONFIG=${KUBECONFIG}
+                            helm uninstall my-release --namespace ${NAMESPACE}
+                        """
+                    }
                 }
             }
-        }
         }
     }
 

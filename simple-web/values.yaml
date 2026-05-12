@@ -8,6 +8,7 @@ image:
 service:
   type: ClusterIP
   port: 80
+  targetPort: 80
 
 ingress:
   enabled: true
@@ -19,3 +20,19 @@ ingress:
       paths:
         - path: /yuvalgr
           pathType: Prefix
+
+resources:
+  limits:
+    cpu: 200m
+    memory: 256Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi
+
+probes:
+  liveness:
+    path: /yuvalgr
+    initialDelaySeconds: 15
+  readiness:
+    path: /yuvalgr
+    initialDelaySeconds: 5
