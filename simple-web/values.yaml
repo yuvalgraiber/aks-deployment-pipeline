@@ -29,10 +29,13 @@ resources:
     cpu: 100m
     memory: 128Mi
 
+# התיקון הקריטי כאן: שינוי הנתיב מ-/yuvalgr ל-/
 probes:
   liveness:
-    path: /yuvalgr
+    path: /
     initialDelaySeconds: 15
+    periodSeconds: 20
   readiness:
-    path: /yuvalgr
+    path: /
     initialDelaySeconds: 5
+    periodSeconds: 10
