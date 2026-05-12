@@ -41,21 +41,20 @@ pipeline {
             }
         }
 
-        stage('Deploy / Destroy') {
+       stage('Deploy / Destroy') {
             steps {
                 script {
                     if (params.ACTION == 'deploy') {
                         sh """
-                            export KUBECONFIG=${KUBECONFIG}
-                            helm upgrade --install my-release ${CHART_PATH} --namespace ${NAMESPACE} --create-namespace --wait
+                            export KUBECONFIG=${env.KUBECONFIG}
+                            helm upgrade --install my-release ${env.CHART_PATH} --namespace ${env.NAMESPACE} --create-namespace --wait
                         """
                     } else {
                         sh """
-                            export KUBECONFIG=${KUBECONFIG}
-                            helm uninstall my-release --namespace ${NAMESPACE}
+                            export KUBECONFIG=${env.KUBECONFIG}
+                            helm uninstall my-release --namespace ${env.NAMESPACE}
                         """
                     }
-                }
             }
         }
     }
